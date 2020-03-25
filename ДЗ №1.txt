@@ -1,0 +1,54 @@
+На текущей машине стоит ОС Windows 10.
+Добавляем в систему компонент Hyper-V.
+Заходим в диспетчер Hyper-V:
+- создаём новую виртуальную машину;
+- выбираем поколение виртуальной машины: второе;
+- указываем директорию для хранения конфигурационных файлов;
+- указываем объём ОЗУ (2Гб);
+- выбираем виртуальный коммутатор по умолчанию;
+- выбираем расположение vhdx диска и указываем его размер.
+- выбираем iso для загрузки и установки ОС Ubuntu.
+
+Устанавливаем Ubuntu:
+- выбираем часовой пояс, язык, вводим имя пользователя, компьютера, логин и пароль.
+
+Обновляем список пакетов:
+$sudo apt-get update
+
+Устанавливаем недостающие зависимости:
+$sudo apt-get install gcc make perl
+
+Утилит адаптации в Hyper-V нет - общий буфер сделать не получилось.
+
+Заходим в диспетчер Hyper-V, открываем диспетчер виртуальных коммутаторов:
+- создаём виртуальный коммутатор типа "внешний";
+- указываем физический интерфейс хоста;
+- ставим разрешение управляющей операционной системе предоставлять общий доступ к этому сетевому адаптеру.
+Т.о. виртуальная машина получила ip-адрес от роутера домашней сети.
+
+Устанавливаем ssh сервер:
+$sudo apt-get install openssh-server
+
+Запускаем PowerShell.
+В терминале виртуальной машины узнаем ip командой:
+$ip a
+В терминале PowerShell вводим:
+$ssh msobol@192.168.1.74
+вводим пароль и получаем удалённый доступ к виртуальной машине.
+
+Генерируем ssh ключ:
+$ssh-keygen
+
+msobol@msobol-VM01:~/.ssh$ ls
+id_rsa  id_rsa.pub
+
+Просматриваем содержимое публичного ключа
+msobol@msobol-VM01:~/.ssh$ cat id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDKa584MtcXeqOUZHrCR9emXOUk9xvZaB3bOqviFTiSHGi2XXI+TMTKRmd6f5jFL1Euuh6BeK3cItlYTOfLgdhbp6hpaPse4un9UZpsQZSLCr2+21/3KZoHBsmDJAQwye+spL77kkyeVWMe1pN1Dacxe5sqKglkwDSAxCr6Dw2xay/p9GUiYwWIoZUzBQIZihMfwjrACRHdWthXtal4zG+khUleYQBUdBgbHijXpMc7qvAIuqNmGUa8YdxBvJ2pofS69DfbD9DuflmGuACIj3v8ryT3Cj6WaL6s0tdesgao69RZT0KtIiiBg3orseTp4rf48Qeoi+EjjS0mcLSK1Jt1 msobol@msobol-VM01
+
+
+
+
+
+
+
