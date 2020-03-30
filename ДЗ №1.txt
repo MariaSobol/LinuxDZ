@@ -46,6 +46,12 @@ id_rsa  id_rsa.pub
 msobol@msobol-VM01:~/.ssh$ cat id_rsa.pub
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDKa584MtcXeqOUZHrCR9emXOUk9xvZaB3bOqviFTiSHGi2XXI+TMTKRmd6f5jFL1Euuh6BeK3cItlYTOfLgdhbp6hpaPse4un9UZpsQZSLCr2+21/3KZoHBsmDJAQwye+spL77kkyeVWMe1pN1Dacxe5sqKglkwDSAxCr6Dw2xay/p9GUiYwWIoZUzBQIZihMfwjrACRHdWthXtal4zG+khUleYQBUdBgbHijXpMc7qvAIuqNmGUa8YdxBvJ2pofS69DfbD9DuflmGuACIj3v8ryT3Cj6WaL6s0tdesgao69RZT0KtIiiBg3orseTp4rf48Qeoi+EjjS0mcLSK1Jt1 msobol@msobol-VM01
 
+Запускаем winscp чтобы скопировать приватный ключ.
+Запускаем puttygen и ковертируем ключ в формат ppk.
+Запускаем putty.
+Подключаемся к виртуальной машине по паролю.
+//$ touch id_rsa.pub authorized_keys - не отработало
+$ cp id_rsa.pub authorized_keys
 
 
 
