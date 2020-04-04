@@ -1,16 +1,84 @@
 1. Создание ссылок:
-- создать файл file1 и наполнить его произвольным содержимым.
-- скопировать файл file1 в file2.
-- создать символическую ссылку file3 на file1.
-- создать жесткую ссылку file4 на file1.
-- посмотреть, какие айноды у файлов.
-- удалить file1. Что стало с остальными созданными файлами? Попробовать вывести их на экран.
+- создать файл file1 и наполнить его произвольным содержимым:
+$ cat > file1
+text1
+
+- скопировать файл file1 в file2:
+$ cp file1 file2
+
+- создать символическую ссылку file3 на file1:
+$ ln -s file1 file3
+
+- создать жесткую ссылку file4 на file1:
+$ ln file1 file4
+
+- посмотреть, какие айноды у файлов:
+265344 -rw-rw-r-- 2 msobol msobol 6 апр  4 21:28 file1
+277095 -rw-rw-r-- 1 msobol msobol 6 апр  4 21:29 file2
+277101 lrwxrwxrwx 1 msobol msobol 5 апр  4 21:29 file3 -> file1
+265344 -rw-rw-r-- 2 msobol msobol 6 апр  4 21:28 file4
+
+- удалить file1:
+$ rm file1
+
+Что стало с остальными созданными файлами?
+277095 -rw-rw-r-- 1 msobol msobol 6 апр  4 21:29 file2
+277101 lrwxrwxrwx 1 msobol msobol 5 апр  4 21:29 file3 -> file1
+265344 -rw-rw-r-- 1 msobol msobol 6 апр  4 21:28 file4
+
+Символическая ссылка стала указывать на несуществующую директорию.
+
+Попробовать вывести их на экран:
+$ cat file2
+text1
+$ cat file3
+cat: file3: No such file or directory
+$ cat file4
+text1
+
 2. Работа со ссылками:
-- дать созданным файлам другие, произвольные имена.
-- создать новую символическую ссылку.
+- дать созданным файлам другие, произвольные имена:
+$ mv file2 newfile1
+$ mv file4 newfile2
+$ ls -li
+277095 -rw-rw-r-- 1 msobol msobol 6 апр  4 21:29 newfile1
+265344 -rw-rw-r-- 1 msobol msobol 6 апр  4 21:28 newfile2
+
+- создать новую символическую ссылку:
+$ ln -s newfile1 newlink1
+$ ln -s newfile2 newlink2
+$ ls -li
+277095 -rw-rw-r-- 1 msobol msobol 6 апр  4 21:29 newfile1
+265344 -rw-rw-r-- 1 msobol msobol 6 апр  4 21:28 newfile2
+278736 lrwxrwxrwx 1 msobol msobol 8 апр  4 21:43 newlink1 -> newfile1
+281140 lrwxrwxrwx 1 msobol msobol 8 апр  4 21:44 newlink2 -> newfile2
+
 - переместить ссылки в другую директорию. Работают ли ссылки? Попробовать вывести их на экран.
+$ mv newlink1 ./newdir/
+$ mv newlink2 ./newdir/
+$ ls -li newdir
+278736 lrwxrwxrwx 1 msobol msobol 8 апр  4 21:43 newlink1 -> newfile1
+281140 lrwxrwxrwx 1 msobol msobol 8 апр  4 21:44 newlink2 -> newfile2
+$ cat /newdir/newlink1
+cat: /newdir/newlink1: No such file or directory
+$ cat /newdir/newlink2
+cat: /newdir/newlink2: No such file or directory
+Символические ссылки работать перестали.
+
 3. Права файлов:
 - создать два произвольных файла.
+$ touch newfile{3..4}
+
 - первому файлу присвоить права на чтение, запись для владельца и группы; на чтение для всех.
-- второму файлу присвоить права на чтение, запись только для владельца. Сделать это в численном и символьном виде.
+$ chmod ug=rw,o=r newfile3
+
+- второму файлу присвоить права на чтение, запись только для владельца.
+$ chmod 600 newfile4
+
+Сделать это в численном и символьном виде.
+
 4. Создать пользователя, обладающего возможностью выполнять действия от имени суперпользователя.
+# useradd user1 -p $(openssl passwd pas111) -G sudo -s /bin/bash -d /home/user1 -m
+
+user1@msobol-VM01:/$ id -Gn
+user1 sudo
