@@ -1,0 +1,17 @@
+1. Написать скрипт, который удаляет из текстового файла пустые строки и заменяет маленькие символы на большие (воспользуйтесь tr или sed). Скрипт должен выводить информацию о том, как его использовать.
+Скрипт в файле "ДЗ №5-1.sh"
+
+2. Определеить, какие ошибки записывается в /var/log/auth.log при попытке неудачной аутентификации пользователя для ssh подключения, для подключения через терминал - ctrl+alt+f3 и для подключения с помощью виртуального терминала (gui приложения). Сделать скрипт мониторинга лога /var/log/auth.log на наличие этих событий, который выводит сообщения о попытке неудачной аутентификации на экран. Проверить скрипт, выполнив ошибочную регистрацию с терминала, с помощью виртуального терминала и через ssh. Скрипт должен выводить информацию о том, как его использовать.
+
+Неудачная аутентификация пользователя для ssh подключения:
+Apr 15 23:19:00 msobol-VM01 sshd[1983]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=192.168.1.105  user=msobol
+Apr 15 23:19:02 msobol-VM01 sshd[1983]: Failed password for msobol from 192.168.1.105 port 58935 ssh2
+
+Неудачная аутентификация пользователя для подключения через терминал:
+Apr 15 23:23:49 msobol-VM01 login[2127]: pam_unix(login:auth): authentication failure; logname=LOGIN uid=0 euid=0 tty=/dev/tty3 ruser= rhost=  user=msobol
+Apr 15 23:23:51 msobol-VM01 login[2127]: FAILED LOGIN (1) on '/dev/tty3' FOR 'msobol', Authentication failure
+
+Неудачная аутентификация пользователя для подключения с помощью виртуального терминала:
+Apr 15 23:26:02 msobol-VM01 gdm-password]: pam_unix(gdm-password:auth): authentication failure; logname= uid=0 euid=0 tty=/dev/tty1 ruser= rhost=  user=msobol
+
+Скрипт в файле "ДЗ №5-2.sh"
