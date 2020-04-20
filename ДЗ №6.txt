@@ -1,0 +1,87 @@
+1. Задание 1
+1.1. Найдите информацию о том, как в Ubuntu открыть порт 80,443. Укажите как.
+Т.к. изначально в дистрибутиве Ubuntu работает политика ACCEPT, то все порты открыты по умолчанию.
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
+
+Чтобы это исправить сначала добавляем необходимые правила для локальных соединений:
+sudo iptables -A INPUT -i lo -j ACCEPT
+sudo iptables -A OUTPUT -o lo -j ACCEPT
+А так же правило для уже установленных соединениий:
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+Затем добавляем правила по портам, которые нам необходимы.
+Для SSH:
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+Для http:
+sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+Для https:
+sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+И переключаем политику на DROP:
+sudo iptables -P INPUT DROP
+Теперь неразрешенные соединения будут отброшены.
+
+1.2. Установить nginx, сконфигурировать свой виртуальный хост, используя порт 80, так, чтобы:
+на запрос клиента с указанным и непустым хидером 'User'. отправлять код 200 с текстом "Hi $user!", где $user - это значение хидера 'User'.
+иначе отправлять код 404 с текстом "Page not found".
+1.3. Прислать конфиг nginx и команду curl, которую выполняете.
+
+Устанавливаем последнюю версию nginx добавив персональный архив пакетов:
+sudo apt-add-repository ppa:nginx/stable
+Обновляем список пакетов из репозиториев и устанавливаем
+sudo apt update
+sudo apt install nginx
+
+Создаем конфигурационный файл:
+sudo vim /etc/nginx/conf.d/mysite/conf
+
+Содержимое файла:
+server{
+        listen 80;
+        server_name mysite;
+
+        location / {
+        if ($http_name != '') {
+                return 200 "Hi $http_name";
+        }
+        return 404 "Not found";
+        }
+}
+
+После записи файла проверяем синтаксис
+sudo nginx -t
+
+И перезапускаем сервер
+sudo service nginx reload
+
+Выполняем запрос curl
+curl -D - http://localhost -H "Host: mysite" -H "name: Sobol"
+
+Ответ:
+HTTP/1.1 200 OK
+Server: nginx/1.16.1
+Date: Sun, 19 Apr 2020 23:18:47 GMT
+Content-Type: application/octet-stream
+Content-Length: 11
+Connection: keep-alive
+
+Hi Sobol
+
+
+При запросе curl -D - http://localhost -H "Host: mysite" -H "name: "
+Ответ:
+HTTP/1.1 404 Not Found
+Server: nginx/1.16.1
+Date: Sun, 19 Apr 2020 23:19:35 GMT
+Content-Type: application/octet-stream
+Content-Length: 9
+Connection: keep-alive
+
+Not found
