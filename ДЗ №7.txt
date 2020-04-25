@@ -1,7 +1,52 @@
-Заглушка до 26.04.2020 г.
+1. Cкачиваем zip архив с github https://github.com/mtuktarov/linux_goodies
+2. Затем с помощью WinScp копируем каталог в виртуальную машину Ubuntu в каталог /home/msobol/Documents/lesson7/django-test-app
+3. Создаем файл с именем dockerfile в каталоге /home/msobol/Documents/lesson7 для настройки нашего образа
+4. В dockerfile пишем следующее содежание:
 
 FROM django:latest
 ARG container_version=0.1
 COPY django-test-app /opt/django-test-app
+RUN pip install -Ur /opt/django-test-app/requirements.txt
+RUN chmod +x /opt/django-test-app/manage.py
+CMD ["/opt/django-test-app/manage.py", "runserver", "0.0.0.0:8000"]
 
-RUN python /opt/django-test-app/manage.py runserver 0.0.0.0:8000
+5. Для сборки контейнера запускаем команду находясь в каталоге, где dockerfile:
+
+docker build . -t djangotestapp:0.1 
+
+6. Чтобы избавиться от ошибки "You have 15 unapplied migration(s)" запускаем команду
+
+docker run -ti -p 8000:8000 -v /home/msobol/Documents/lesson7/django-test-app/db.sqlite3:/opt/django-test-app/db.sqlite3 djangotestapp:0.1 /opt/django-test-app/manage.py migrate
+
+7. Запускаем контейнер с параметрами проброса порта из ubuntu и монтирования в контейнер базы с хоста
+docker run -ti -p 8000:8000 -v /home/msobol/Documents/lesson7/django-test-app/db.sqlite3:/opt/django-test-app/db.sqlite3 djangotestapp:0.1
+
+На экране видим:
+Performing system checks...
+
+System check identified no issues (0 silenced).
+April 25, 2020 - 20:28:56
+Django version 2.0.8, using settings 'demo.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CONTROL-C.
+
+При обращении в браузере с хоста по адресу ubuntu:8000 видим ракету и сообщение:
+The install worked successfully! Congratulations!
+
+8. Для загрузки нашего контейнера на docker hub 
+Регистрируемся на docker hub
+Логинимся в ubuntu в учетную запись docker hub
+docker login
+
+Делаем commit
+docker commit -m "Adding django test app" -a "mariasobol" \5aacde9f1eac mariasobol/djangotestapp:0.1
+
+Выгружаем в dockerhub
+docker push mariasobol/djangotestapp:0.1
+
+Вывод при поиске образа docker search
+msobol@ubuntu:~/Documents/lesson7$ docker search djangotestapp
+NAME                          DESCRIPTION                                     STARS               OFFICIAL            AUTOMATED
+35207123/djangotestapp                                                        0
+mariasobol/djangotestapp      This is a a django test application for educ…   0
+jasperscheper/djangotestapp      
