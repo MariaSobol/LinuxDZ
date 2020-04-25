@@ -1,0 +1,7 @@
+Заглушка до 26.04.2020 г.
+
+FROM django:latest
+ARG container_version=0.1
+COPY django-test-app /opt/django-test-app
+
+RUN python /opt/django-test-app/manage.py runserver 0.0.0.0:8000
