@@ -1,1 +1,132 @@
-Заглушка до 02 мая 2020 г.
+#Создадим структуру каталогов для проекта
+mkdir ~/lesson8
+cd lesson8
+mkdir www mysql logs hosts images
+
+#В Hosts создаем каталог для сайта
+mkdir hosts/hospital.local
+#В этот каталог через WinSCP загружены файлы приложения из github
+
+#Установим Docker Compose по официальной документации https://docs.docker.com/compose/install/
+sudo curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+#Создадим образ для PHP
+mkdir images/php
+vim dockerfile
+#Содержимое images/php/dockerfile
+FROM php:7.1-fpm
+RUN apt-get update && apt-get install -y \
+        curl \
+        wget \
+        git \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libmcrypt-dev \
+    && docker-php-ext-install -j$(nproc) iconv mcrypt mbstring mysqli pdo_mysql zip \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install -j$(nproc) gd
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Указываем рабочую директорию для PHP
+WORKDIR /var/www
+
+CMD ["php-fpm"]
+
+#Создадим образ для mysql, в котором добавим файл инициализации БД
+FROM mysql:latest
+ADD hospital_db.sql /docker-entrypoint-initdb.d
+
+#Создаем в корне lesson8 файл docker-compose.yml следующего содержания:
+# Версия docker-compose
+version: '2'
+services:
+    nginx:
+   # Указываем последний образ nginx
+        image: nginx:latest
+        # Настраиваем переадресацию портов
+        ports:
+            - "80:80"
+            - "443:443"
+        # Настраиваем монтирование каталогов в контейнер. Монтируем папку с конфигами, папку самого приложения и логи
+        volumes:
+            - ./hosts:/etc/nginx/conf.d
+            - ./www:/var/www
+            - ./logs:/var/log/nginx
+        # Настраиваем связь nginx и php
+        links:
+            - php
+    php:
+        # Указываем путь к образу с PHP
+        build: ./images/php
+        # Настраиваем связь с mysql
+        links:
+            - mysql
+        # Настраиваем монтирование каталогов в контейнер c данными приложения
+        volumes:
+            - ./www:/var/www
+    mysql:
+        # Указываем путь к образу с mysql
+        build: ./images/mysql
+        # Команда необходима, чтобы настроить устаревший споосб авторизации в mysql. Иначе ошибка SQLSTATE[HY000] [2054]
+        command: --default-authentication-plugin=mysql_native_password
+        # Настраиваем переадресацию портов
+        ports:
+            - "3306:3306"
+        volumes:
+            - ./mysql:/var/lib/mysql
+        # Задаем пароль для root пользователя,имя создаваемой БД, логин и пароль пользователя, с которыми будет подключаться приложение
+        environment:
+            - MYSQL_ROOT_PASSWORD=password
+            - MYSQL_DATABASE=hospital_db
+            - MYSQL_USER=admin
+            - MYSQL_PASSWORD=admin
+
+
+
+#Задаем файл конфигурации hosts/hospital.local.conf для nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name hospital.local;
+    root /var/www/hospital.local;
+    index Doctor/index.php index.html;
+    rewrite ^(/)d(octor.*) $1D$2;
+
+    location ~ \.php$ {
+        fastcgi_pass    php:9000;
+        include fastcgi_params;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        try_files $fastcgi_script_name =404;
+        set $path_info $fastcgi_path_info;
+        fastcgi_param PATH_INFO $path_info;
+        fastcgi_index Doctor/index.php;
+        fastcgi_param  SCRIPT_FILENAME    /var/www/hospital.local/$fastcgi_script_name;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+
+#Запускаем сборку проекта
+docker-compose up -d --build
+
+#Сборка завершлась выводом:
+Creating lesson8_mysql_1 ... done
+Creating lesson8_php_1   ... done
+Creating lesson8_nginx_1 ... done
+
+#Для доступа с хостовой ОС Windows в файл C:\Windows\system32\drivers\etc\hosts была добавлена строка
+192.168.1.106 hospital.local
+
+#При обращении через браузер hospital.local получаем страницу с выводом данных из БД по врачам
+#В Базу по умолчанию занесена запись:
+Name 	Email 	Phone 	Gender 	Specialist 	Action
+Ahsan Saeed Ibn	ahsansaeed067@gmail.com	03218878961	Male	Heart	Edit | Remove
+
+#При добавлении новых записей появляется окно, которое сообщает "Successfully Added New doctor!"
+#При удалении появляется сообщение с просьбой подтвердить действие "Are you sure you want to Delete the doctor Record?"
+#После удаление выводится сообщение "Successfully Removed doctor!"
+#Но после действий удаления\добавления происходит переход на несуществующую страницу http://hospital.local/Doctor/
+#В чем проблема не разобралась.
